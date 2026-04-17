@@ -1,0 +1,167 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Syne', 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+
+  /* Primary brand — ana renk #70151C (primary-600) */
+  --color-primary-50: #fcf6f6;
+  --color-primary-100: #f5e8ea;
+  --color-primary-200: #e9ccd0;
+  --color-primary-300: #d4a3aa;
+  --color-primary-400: #b85c68;
+  --color-primary-500: #8c3944;
+  --color-primary-600: #70151c;
+  --color-primary-700: #5a1116;
+  --color-primary-800: #4a0e13;
+  --color-primary-900: #2c090c;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    @apply text-slate-800 antialiased font-sans;
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(ellipse 120% 80% at 100% -20%, rgba(112, 21, 28, 0.06), transparent 50%),
+      radial-gradient(ellipse 80% 60% at -10% 50%, rgba(15, 23, 42, 0.04), transparent 45%),
+      linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+
+  ::selection {
+    @apply bg-primary-200/90 text-slate-900;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-500/50 ring-offset-2 ring-offset-[#f8fafc];
+  }
+
+  @media print {
+    header,
+    footer,
+    [data-print-hide] {
+      display: none !important;
+    }
+    body {
+      background: white !important;
+    }
+    main {
+      max-width: 100% !important;
+    }
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply border border-white/60 bg-white/70 shadow-xl shadow-slate-900/5 backdrop-blur-xl;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .card-glow {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: conic-gradient(
+      from var(--glow-angle, 0deg),
+      transparent 40%,
+      #70151C 50%,
+      #b85c68 55%,
+      transparent 65%
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+  .card-glow:hover::before {
+    opacity: 1;
+    animation: glow-spin 2.5s linear infinite;
+  }
+
+  @keyframes glow-spin {
+    to { --glow-angle: 360deg; }
+  }
+
+  @property --glow-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .admin-page-title {
+    @apply font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-slate-900;
+  }
+
+  .admin-page-subtitle {
+    @apply mt-2 text-sm text-slate-600;
+  }
+
+  .admin-card {
+    @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+  }
+
+  .admin-card-soft {
+    @apply rounded-2xl border border-slate-200 bg-slate-50/70 p-4;
+  }
+
+  .admin-section-title {
+    @apply text-lg font-semibold text-slate-900;
+  }
+
+  .admin-input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 transition;
+    @apply focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20;
+  }
+
+  .admin-label {
+    @apply text-sm font-semibold text-slate-800;
+  }
+
+  .admin-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .admin-btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+
+  .admin-btn-secondary {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-400;
+  }
+
+  .admin-btn-danger {
+    @apply border border-red-200 bg-red-50 text-red-800 hover:bg-red-100 focus:ring-red-400;
+  }
+}

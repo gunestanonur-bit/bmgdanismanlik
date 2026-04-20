@@ -1,3 +1,4 @@
+import { readFileAsDataUrl } from '../../lib/readFileAsDataUrl'
 import { useSiteContent } from '../../content/SiteContentContext'
 import { useToast } from '../../components/Toast'
 import { ImagePreview } from '../components/ImagePreview'
@@ -32,14 +33,16 @@ export function BannerSettingsPage() {
 
   async function onFilePicked(key: BannerKey, file?: File) {
     if (!file) return
-    const value = await readAsDataUrl(file)
+    const value = await readFileAsDataUrl(file)
     save(key, value)
   }
 
   return (
     <div>
       <h1 className="admin-page-title">Bannerlar</h1>
-      <p className="admin-page-subtitle">Ana sayfa hariç tüm sayfalar için banner dosyaları.</p>
+      <p className="admin-page-subtitle">
+        Ana sayfa hariç sayfaların üst görselleri. Kaydettiğiniz dosyalar hem herkese açık sitede hem ilgili yönetim sayfalarında (Hakkımızda, Site ve metinler, hizmet listeleri ve düzenleme) aynı şekilde görünür.
+      </p>
 
       <section className="admin-card mt-8">
         <div className="space-y-5">
@@ -83,13 +86,4 @@ export function BannerSettingsPage() {
       </section>
     </div>
   )
-}
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result ?? ''))
-    reader.onerror = () => reject(reader.error ?? new Error('Dosya okunamadı.'))
-    reader.readAsDataURL(file)
-  })
 }

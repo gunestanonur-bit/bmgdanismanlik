@@ -1,12 +1,15 @@
 import { type FormEvent, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { isAdminSession, signIn } from '../auth'
+import { useSiteContent } from '../../content/SiteContentContext'
 
 const HAS_SUPABASE = !!(
   import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
 )
 
 export function AdminLoginPage() {
+  const { content } = useSiteContent()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -33,8 +36,12 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
-      <div className="w-full max-w-sm rounded-3xl border border-slate-800/80 bg-slate-900/90 p-8 shadow-2xl backdrop-blur">
+    <>
+      <Helmet>
+        <link rel="icon" href={content.site.favicon || '/favicon.svg'} />
+      </Helmet>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
+        <div className="w-full max-w-sm rounded-3xl border border-slate-800/80 bg-slate-900/90 p-8 shadow-2xl backdrop-blur">
         <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-600/20">
           <svg className="h-6 w-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -114,7 +121,8 @@ export function AdminLoginPage() {
             Supabase Auth — Supabase Dashboard'dan oluşturduğunuz kullanıcı bilgilerini girin.
           </p>
         )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

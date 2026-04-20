@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getDefaultAboutPage } from '../../content/buildDefault'
 import { useSiteContent } from '../../content/SiteContentContext'
+import { AdminPageBannerPreview } from '../components/AdminPageBannerPreview'
 import { useToast } from '../../components/Toast'
 import type { AboutPageContent } from '../../content/types'
 
@@ -186,6 +187,13 @@ export function AboutSettingsPage() {
         </div>
       </header>
 
+      <AdminPageBannerPreview
+        bannerKey="hakkimizda"
+        fallback={source.heroImageUrl}
+        title="Hakkımızda — üst banner"
+        publicPath="/hakkimizda"
+      />
+
       <aside className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-600">
         <span className="font-medium text-slate-700">Değişken:</span>{' '}
         Metinlerde <code className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-xs">{'{name}'}</code> kullandığınızda şirket adı otomatik yerleştirilir.
@@ -229,7 +237,7 @@ function AboutViewContent({ data }: { data: AboutPageContent }) {
           <div>
             <dt className="text-xs font-medium text-slate-500">Uzunluk</dt>
             <dd className={`mt-0.5 text-sm ${metaLen >= 140 && metaLen <= 170 ? 'text-emerald-700' : 'text-amber-700'}`}>
-              {metaLen} karakter {metaLen >= 140 && metaLen <= 170 ? '(onerilen aralikta)' : '(onerilen: 140-170)'}
+              {metaLen} karakter {metaLen >= 140 && metaLen <= 170 ? '(önerilen aralıkta)' : '(önerilen: 140–170)'}
             </dd>
           </div>
         </dl>
@@ -367,7 +375,7 @@ function AboutEditForm({
       <EditSection id="seo" title="2. SEO" desc="Arama sonuçları için meta açıklama" onSave={onSaveSection} onEdit={onEditSection} onDelete={onDeleteSection}>
         <TextareaField
           label="Meta açıklama"
-          hint={`Bos birakirsaniz otomatik uretilir. Onerilen uzunluk: 140-170 karakter (su an: ${metaLen})`}
+          hint={`Boş bırakırsanız otomatik üretilir. Önerilen uzunluk: 140–170 karakter (şu an: ${metaLen})`}
           value={draft.metaDescription}
           rows={3}
           onChange={(v) => patch({ metaDescription: v })}

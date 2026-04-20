@@ -4,6 +4,10 @@ import type { HeroSlide } from '../content/types'
 
 const AUTO_MS = 6500
 
+/** When src is cleared in admin; keeps layout valid — exported for OG / SEO */
+export const HERO_SLIDE_IMAGE_FALLBACK =
+  'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1920&q=85'
+
 type HeroSliderProps = {
   slides: readonly HeroSlide[]
   onIndexChange?: (index: number) => void
@@ -17,20 +21,43 @@ export function HeroSlider({ slides, onIndexChange }: HeroSliderProps) {
 
   const go = useCallback(
     (delta: number) => {
+      if (slides.length < 1) return
       setIndex((i) => (i + delta + slides.length) % slides.length)
     },
     [slides.length],
   )
 
   useEffect(() => {
-    if (reduce || paused) return
+    if (!slides.length) return
+    setIndex((i) => Math.min(i, slides.length - 1))
+  }, [slides.length])
+
+  useEffect(() => {
+    if (reduce || paused || slides.length < 1) return
     const t = window.setInterval(() => go(1), AUTO_MS)
     return () => window.clearInterval(t)
-  }, [go, reduce, paused])
+  }, [go, reduce, paused, slides.length])
 
   useEffect(() => {
     onIndexChange?.(index)
   }, [index, onIndexChange])
+
+  if (slides.length < 1) {
+    return (
+      <div className="absolute inset-0 overflow-hidden" aria-hidden>
+        <img
+          src={HERO_SLIDE_IMAGE_FALLBACK}
+          alt=""
+          className="h-full w-full object-cover object-center"
+          decoding="async"
+          fetchPriority="high"
+          sizes="100vw"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1a0a0c]/95 via-[#70151C]/35 to-black/25" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/30" />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -63,7 +90,7 @@ export function HeroSlider({ slides, onIndexChange }: HeroSliderProps) {
           transition={{ duration: reduce ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           <img
-            src={slides[index].src}
+            src={slides[index].src?.trim() || HERO_SLIDE_IMAGE_FALLBACK}
             alt={slides[index].alt}
             className="h-full w-full object-cover object-center"
             decoding="async"

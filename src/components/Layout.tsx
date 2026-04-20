@@ -5,7 +5,6 @@ import { Helmet } from 'react-helmet-async'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { PageTransition } from './PageTransition'
-import { WhatsAppFab } from './WhatsAppFab'
 import { useSiteContent } from '../content/SiteContentContext'
 
 const RING_R = 18
@@ -94,7 +93,6 @@ export function Layout() {
         </main>
         <Footer />
       </div>
-      <WhatsAppFab />
       <ScrollToTopButton />
     </>
   )

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SeoHelmet } from '../components/SeoHelmet'
+import { HERO_SLIDE_IMAGE_FALLBACK } from '../components/HeroSlider'
 import { Hero } from '../components/sections/Hero'
 import { AboutSection } from '../components/sections/AboutSection'
 import { ConsultingSection } from '../components/sections/ConsultingSection'
@@ -29,7 +30,7 @@ export function HomePage() {
   }, [location.hash, location.pathname])
 
   const pageTitle = `${site.name} | ISO ve Yönetim Sistemi Danışmanlığı`
-  const ogImage = heroSlides[0]?.src
+  const ogImage = heroSlides[0]?.src?.trim() || HERO_SLIDE_IMAGE_FALLBACK
 
   const jsonLdBlocks = [
     organizationJsonLd(site.url, site),

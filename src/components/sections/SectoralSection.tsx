@@ -6,7 +6,7 @@ import { useSiteContent } from '../../content/SiteContentContext'
 
 export function SectoralSection() {
   const { content } = useSiteContent()
-  const { sectoralServices, sectoralHighlights } = content
+  const { sectoralServices, sectoralHighlights, homeSectionCopy: h } = content
 
   return (
     <section
@@ -17,14 +17,8 @@ export function SectoralSection() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-14 lg:grid-cols-2 lg:items-start lg:gap-16">
           <FadeIn>
-            <SectionHeading
-              id="sektorel-baslik"
-              eyebrow="Sektör"
-              title="Sektörel hizmetler"
-            >
-              <p className="mt-6 text-lg leading-relaxed text-slate-600">
-                Havacılık, savunma, EYDEP ve tesis güvenliği gibi özel gereksinimlerde eğitim, danışmanlık ve analiz desteği sunuyoruz. Her hizmet için ayrıntılı sayfalarımızı inceleyebilirsiniz.
-              </p>
+            <SectionHeading id="sektorel-baslik" eyebrow={h.sectoralEyebrow} title={h.sectoralTitle}>
+              <p className="mt-6 text-lg leading-relaxed text-slate-600">{h.sectoralIntro}</p>
             </SectionHeading>
             <ul className="mt-8 space-y-3">
               {sectoralHighlights.map((t) => (
@@ -41,7 +35,7 @@ export function SectoralSection() {
                 to="/sektorel"
                 className="inline-flex rounded-2xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700"
               >
-                Tüm sektörel hizmetler
+                {h.sectoralHubButton}
               </Link>
             </p>
           </FadeIn>

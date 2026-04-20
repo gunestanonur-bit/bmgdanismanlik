@@ -59,6 +59,20 @@ const navCards = [
     desc: 'Ana sayfa hariç sayfa bannerları',
     icon: '🧩',
   },
+  {
+    to: '/admin/home-sections',
+    label: 'Ana sayfa metinleri',
+    tag: 'Metin',
+    desc: 'Iletisim, bolum basliklari ve footer',
+    icon: '📝',
+  },
+  {
+    to: '/admin/email',
+    label: 'E-posta ayarlari',
+    tag: 'E-posta',
+    desc: 'Iletisim formu gonderim ayarlari',
+    icon: '✉️',
+  },
 ] as const
 
 export function AdminDashboard() {

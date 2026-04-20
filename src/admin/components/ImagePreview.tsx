@@ -1,23 +1,32 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface Props {
   url: string
   className?: string
+  /** e.g. min-h-[12rem] for hero slider preview */
+  imgClassName?: string
 }
 
-function isImageUrl(url: string): boolean {
+function isDisplayableImageUrl(url: string): boolean {
+  const t = url.trim()
+  if (!t) return false
+  if (t.startsWith('data:image/')) return true
   try {
-    const u = new URL(url)
-    return u.protocol.startsWith('http')
+    const u = new URL(t)
+    return u.protocol === 'http:' || u.protocol === 'https:'
   } catch {
     return false
   }
 }
 
-export function ImagePreview({ url, className = '' }: Props) {
+export function ImagePreview({ url, className = '', imgClassName = 'h-24 w-full object-cover' }: Props) {
   const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading')
 
-  if (!isImageUrl(url)) return null
+  useEffect(() => {
+    setState('loading')
+  }, [url])
+
+  if (!isDisplayableImageUrl(url)) return null
 
   return (
     <div className={`overflow-hidden rounded-lg border border-slate-200 bg-slate-100 ${className}`}>
@@ -32,7 +41,7 @@ export function ImagePreview({ url, className = '' }: Props) {
           alt="Önizleme"
           onLoad={() => setState('ok')}
           onError={() => setState('error')}
-          className={`h-24 w-full object-cover transition-opacity duration-300 ${state === 'ok' ? 'opacity-100' : 'opacity-0'}`}
+          className={`${imgClassName} transition-opacity duration-300 ${state === 'ok' ? 'opacity-100' : 'opacity-0'}`}
         />
       )}
     </div>

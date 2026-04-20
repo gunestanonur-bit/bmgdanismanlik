@@ -6,21 +6,15 @@ import { useSiteContent } from '../../content/SiteContentContext'
 
 export function TrainingSection() {
   const { content } = useSiteContent()
-  const { trainingServices, trainingHighlights } = content
+  const { trainingServices, trainingHighlights, homeSectionCopy: h } = content
 
   return (
     <section id="egitim" className="scroll-mt-24 py-20 sm:py-24 lg:py-28" aria-labelledby="egitim-baslik">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-14 lg:grid-cols-2 lg:items-start lg:gap-16">
           <FadeIn>
-            <SectionHeading
-              id="egitim-baslik"
-              eyebrow="Kapasite"
-              title="Eğitim hizmetlerimiz"
-            >
-              <p className="mt-6 text-lg leading-relaxed text-slate-600">
-                Yönetim sistemi farkındalığından iç tetkire kadar ekiplerinizin yetkinliğini artıran eğitimler planlıyoruz. ISO ve sektörel programların tamamı için ayrıntılı sayfalarımızı inceleyebilirsiniz.
-              </p>
+            <SectionHeading id="egitim-baslik" eyebrow={h.trainingEyebrow} title={h.trainingTitle}>
+              <p className="mt-6 text-lg leading-relaxed text-slate-600">{h.trainingIntro}</p>
             </SectionHeading>
             <ul className="mt-8 space-y-3">
               {trainingHighlights.map((t) => (
@@ -37,7 +31,7 @@ export function TrainingSection() {
                 to="/egitim"
                 className="inline-flex rounded-2xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-600/25 transition hover:bg-primary-700"
               >
-                Tüm eğitim programları
+                {h.trainingHubButton}
               </Link>
             </p>
           </FadeIn>

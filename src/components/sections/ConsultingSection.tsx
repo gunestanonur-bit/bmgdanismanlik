@@ -5,7 +5,7 @@ import { useSiteContent } from '../../content/SiteContentContext'
 
 export function ConsultingSection() {
   const { content } = useSiteContent()
-  const { consultingServices } = content
+  const { consultingServices, homeSectionCopy: h } = content
 
   return (
     <section
@@ -15,14 +15,8 @@ export function ConsultingSection() {
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <FadeIn>
-          <SectionHeading
-            id="danismanlik-baslik"
-            eyebrow="Uzmanlık"
-            title="Danışmanlık hizmetlerimiz"
-          >
-            <p className="mt-6 text-lg leading-relaxed text-slate-600">
-              Aşağıdaki standartlarda sistem kurulumu, mevcut sistemin güçlendirilmesi ve sürekli iyileştirme danışmanlığı sunuyoruz. Her hizmet için ayrıntılı sayfalarımızı inceleyebilirsiniz.
-            </p>
+          <SectionHeading id="danismanlik-baslik" eyebrow={h.consultingEyebrow} title={h.consultingTitle}>
+            <p className="mt-6 text-lg leading-relaxed text-slate-600">{h.consultingIntro}</p>
           </SectionHeading>
         </FadeIn>
 

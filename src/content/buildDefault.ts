@@ -1,6 +1,7 @@
 import { consultingServices } from '../data/consultingServices'
 import { trainingServices } from '../data/trainingServices'
 import { sectoralServices } from '../data/sectoralServices'
+import { defaultHomeSectionCopy } from '../data/homeSectionCopy'
 import { navItems, sectoralHighlights, site, trainingHighlights } from '../data/site'
 import { heroSlides } from '../data/heroSlides'
 import {
@@ -13,6 +14,7 @@ import { SECTORAL_HUB_HERO, SECTORAL_HUB_SECONDARY, sectoralHeroBySlug } from '.
 import type {
   AboutPageContent,
   ConsultingService,
+  HomeSectionCopy,
   NavItem,
   SectoralService,
   SiteContent,
@@ -100,6 +102,13 @@ export function buildDefaultSiteContent(): SiteContent {
       danismanlikDetay: '',
       egitimDetay: '',
       sektorelDetay: '',
+    },
+    homeSectionCopy: clone(defaultHomeSectionCopy) as HomeSectionCopy,
+    emailSettings: {
+      recipientEmail: site.email,
+      fromName: 'BMG Danismanlik Website',
+      subjectPrefix: 'Yeni Iletisim Formu',
+      successMessage: 'Mesajiniz iletildi. En kisa surede sizinle iletisime gececegiz.',
     },
   }
 }

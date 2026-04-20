@@ -32,6 +32,11 @@ CREATE TABLE site_config (
   address     TEXT NOT NULL,
   tagline     TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
+  logo        TEXT NOT NULL DEFAULT '',
+  favicon     TEXT NOT NULL DEFAULT '/favicon.svg',
+  page_banners JSONB NOT NULL DEFAULT '{}'::jsonb,
+  home_section_copy JSONB NOT NULL DEFAULT '{}'::jsonb,
+  email_settings JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -41,6 +46,13 @@ CREATE TABLE nav_items (
   label_short TEXT,
   sort_order  SMALLINT NOT NULL DEFAULT 0
 );
+
+ALTER TABLE site_config
+  ADD COLUMN IF NOT EXISTS logo TEXT NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS favicon TEXT NOT NULL DEFAULT '/favicon.svg',
+  ADD COLUMN IF NOT EXISTS page_banners JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS home_section_copy JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS email_settings JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 CREATE TABLE hero_slides (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -218,11 +230,11 @@ ON CONFLICT (id) DO UPDATE SET
   sort_order = EXCLUDED.sort_order;
 
 INSERT INTO hero_slides (src, alt, sort_order) VALUES
-  ('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1920&q=85', 'AS 9100 Havacilik Uzay ve Savunma Sanayi KYS Danismanlik Hizmeti', 10),
-  ('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=85', 'ISO 9001 Kalite Yonetim Sistemi Danismanlik Hizmeti', 20),
-  ('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1920&q=85', 'Belgelendirme Hazirligi ve Denetim Koordinasyonu', 30),
-  ('https://images.unsplash.com/photo-1581092160562-40aa08f7880a?auto=format&fit=crop&w=1920&q=85', 'Surec Iyilestirme ve Operasyonel Mukemmellik', 40),
-  ('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1920&q=85', 'Teknik Egitim ve Kurumsal Yetkinlik Gelisimi', 50);
+  ('https://images.unsplash.com/photo-1579160876799-e91477a8ebb8?auto=format&fit=crop&w=1920&q=85', 'Havacilik sanayiinde jet motoru ve havacilik muhendisligi', 10),
+  ('https://images.unsplash.com/photo-1586281380349-632531db7ed8?auto=format&fit=crop&w=1920&q=85', 'ISO kalite yonetim sistemi dokumantasyonu ve surec gozden gecirmesi', 20),
+  ('https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1920&q=85', 'Belgelendirme ve denetim oncesi ekip ile surec ve uyumluluk planlamasi', 30),
+  ('https://images.unsplash.com/photo-1581092160562-40aa08f7880a?auto=format&fit=crop&w=1920&q=85', 'Uretim hattinda surec iyilestirme ve operasyonel verimlilik', 40),
+  ('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1920&q=85', 'Teknik egitim sinifinda kurumsal yetkinlik ve standart farkindaligi', 50);
 
 INSERT INTO hero_stats (label, value, sort_order) VALUES
   ('Standart kapsami', 'AS 9100 & ISO 9001', 10),

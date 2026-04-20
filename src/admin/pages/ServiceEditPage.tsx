@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { getConsultingHeroImage, getSectoralHeroImage, getTrainingHeroImage } from '../../content/selectors'
 import { useSiteContent } from '../../content/SiteContentContext'
 import { useToast } from '../../components/Toast'
 import type { ConsultingService } from '../../content/types'
+import { AdminPageBannerPreview } from '../components/AdminPageBannerPreview'
 import { supabase } from '../../lib/supabase'
 
 type Kind = 'consulting' | 'training' | 'sectoral'
@@ -152,6 +154,19 @@ export function ServiceEditPage({ kind }: { kind: Kind }) {
   }
 
   const meta = labels[kind]
+  const bannerKey = kind === 'consulting' ? 'danismanlikDetay' : kind === 'training' ? 'egitimDetay' : 'sektorelDetay'
+  const detailHeroFallback =
+    kind === 'consulting'
+      ? getConsultingHeroImage(content, svc.slug)
+      : kind === 'training'
+        ? getTrainingHeroImage(content, svc.slug)
+        : getSectoralHeroImage(content, svc.slug)
+  const detailPublicPath =
+    kind === 'consulting'
+      ? `/danismanlik/${encodeURIComponent(svc.slug)}`
+      : kind === 'training'
+        ? `/egitim/${encodeURIComponent(svc.slug)}`
+        : `/sektorel/${encodeURIComponent(svc.slug)}`
 
   async function save() {
     const d = draft
@@ -226,6 +241,15 @@ export function ServiceEditPage({ kind }: { kind: Kind }) {
         <span className="text-slate-400">/</span>
         <span className="font-medium text-slate-800">{draft?.title || svc.title}</span>
       </nav>
+
+      <div className="mt-6">
+        <AdminPageBannerPreview
+          bannerKey={bannerKey}
+          fallback={detailHeroFallback}
+          title={`${meta.name} detay — üst banner (tüm ${meta.name.toLowerCase()} sayfaları)`}
+          publicPath={detailPublicPath}
+        />
+      </div>
 
       <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
         <h1 className="admin-page-title text-2xl">Hizmeti düzenle</h1>

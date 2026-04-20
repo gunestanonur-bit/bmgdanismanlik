@@ -1,5 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { logoutAdmin } from './auth'
+import { useSiteContent } from '../content/SiteContentContext'
 
 const navGroups = [
   {
@@ -11,6 +13,8 @@ const navGroups = [
       { to: '/admin/hero', label: 'Hero slider' },
       { to: '/admin/visuals', label: 'Görseller (URL)' },
       { to: '/admin/banners', label: 'Bannerlar' },
+      { to: '/admin/home-sections', label: 'Ana sayfa metinleri' },
+      { to: '/admin/email', label: 'E-posta ayarlari' },
     ],
   },
   {
@@ -25,10 +29,15 @@ const navGroups = [
 
 export function AdminLayout() {
   const navigate = useNavigate()
+  const { content } = useSiteContent()
 
   return (
-    <div className="min-h-screen bg-slate-100/80">
-      <div className="flex min-h-screen flex-col lg:flex-row">
+    <>
+      <Helmet>
+        <link rel="icon" href={content.site.favicon || '/favicon.svg'} />
+      </Helmet>
+      <div className="min-h-screen bg-slate-100/80">
+        <div className="flex min-h-screen flex-col lg:flex-row">
         <aside className="border-b border-slate-800/80 bg-gradient-to-b from-slate-950 to-slate-900 text-slate-200 lg:sticky lg:top-0 lg:flex lg:min-h-screen lg:w-72 lg:flex-col lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between gap-3 px-4 py-4 lg:flex-col lg:items-stretch lg:px-6 lg:py-8">
             <div>
@@ -84,7 +93,8 @@ export function AdminLayout() {
             <Outlet />
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -11,6 +11,8 @@ import { AboutSettingsPage } from './admin/pages/AboutSettingsPage'
 import { SiteSettingsPage } from './admin/pages/SiteSettingsPage'
 import { VisualsSettingsPage } from './admin/pages/VisualsSettingsPage'
 import { BannerSettingsPage } from './admin/pages/BannerSettingsPage'
+import { HomeSectionsPage } from './admin/pages/HomeSectionsPage'
+import { EmailSettingsPage } from './admin/pages/EmailSettingsPage'
 import { Layout } from './components/Layout'
 import { PageLoader } from './components/PageLoader'
 
@@ -42,10 +44,12 @@ export default function App() {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="site" element={<SiteSettingsPage />} />
+          <Route path="home-sections" element={<HomeSectionsPage />} />
           <Route path="about" element={<AboutSettingsPage />} />
           <Route path="hero" element={<HeroSettingsPage />} />
           <Route path="visuals" element={<VisualsSettingsPage />} />
           <Route path="banners" element={<BannerSettingsPage />} />
+          <Route path="email" element={<EmailSettingsPage />} />
           <Route path="consulting" element={<ServiceListPage kind="consulting" />} />
           <Route path="consulting/:slug" element={<ServiceEditPage kind="consulting" />} />
           <Route path="training" element={<ServiceListPage kind="training" />} />

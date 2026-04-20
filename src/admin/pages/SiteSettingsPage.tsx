@@ -1,14 +1,28 @@
+import { useEffect, useMemo, useState } from 'react'
+import { CONTACT_PAGE_HERO_FALLBACK } from '../../content/contactHeroFallback'
 import { useSiteContent } from '../../content/SiteContentContext'
 import { useToast } from '../../components/Toast'
 import type { NavItem } from '../../content/types'
+import { AdminPageBannerPreview } from '../components/AdminPageBannerPreview'
 
 export function SiteSettingsPage() {
   const { content, updateContent } = useSiteContent()
   const toast = useToast()
+  const [siteDraft, setSiteDraft] = useState(content.site)
 
-  function saveSite(partial: Partial<typeof content.site>) {
-    updateContent((c) => ({ ...c, site: { ...c.site, ...partial } }))
-    toast('Kaydedildi.')
+  useEffect(() => {
+    setSiteDraft(content.site)
+  }, [content.site])
+
+  const siteDirty = useMemo(
+    () => JSON.stringify(siteDraft) !== JSON.stringify(content.site),
+    [siteDraft, content.site],
+  )
+
+  function saveSiteDraft() {
+    if (!siteDirty) return
+    updateContent((c) => ({ ...c, site: { ...siteDraft } }))
+    toast('Site metinleri kaydedildi.')
   }
 
   function saveHighlights(which: 'training' | 'sectoral', lines: string) {
@@ -30,7 +44,7 @@ export function SiteSettingsPage() {
   async function onFilePicked(which: 'logo' | 'favicon', file?: File) {
     if (!file) return
     const dataUrl = await readAsDataUrl(file)
-    saveSite({ [which]: dataUrl })
+    setSiteDraft((prev) => ({ ...prev, [which]: dataUrl }))
   }
 
   return (
@@ -38,13 +52,32 @@ export function SiteSettingsPage() {
       <h1 className="admin-page-title">Site & metinler</h1>
       <p className="admin-page-subtitle">Genel bilgiler, menü ve öne çıkan maddeler.</p>
 
+      <div className="mt-8">
+        <AdminPageBannerPreview
+          bannerKey="iletisim"
+          fallback={CONTACT_PAGE_HERO_FALLBACK}
+          title="İletişim sayfası — üst banner"
+          publicPath="/iletisim"
+        />
+      </div>
+
       <section className="admin-card mt-8">
-        <h2 className="admin-section-title">Kurumsal bilgiler</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h2 className="admin-section-title">Kurumsal bilgiler</h2>
+          <button
+            type="button"
+            className="admin-btn admin-btn-primary"
+            disabled={!siteDirty}
+            onClick={saveSiteDraft}
+          >
+            Site metinlerini kaydet
+          </button>
+        </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <Field label="Site adı" value={content.site.name} onBlur={(v) => saveSite({ name: v })} />
-          <Field label="Canonical URL" value={content.site.url} onBlur={(v) => saveSite({ url: v })} />
-          <Field label="E-posta" value={content.site.email} onBlur={(v) => saveSite({ email: v })} />
-          <Field label="Telefon" value={content.site.phone} onBlur={(v) => saveSite({ phone: v })} />
+          <Field label="Site adı" value={siteDraft.name} onChange={(v) => setSiteDraft((s) => ({ ...s, name: v }))} />
+          <Field label="Canonical URL" value={siteDraft.url} onChange={(v) => setSiteDraft((s) => ({ ...s, url: v }))} />
+          <Field label="E-posta" value={siteDraft.email} onChange={(v) => setSiteDraft((s) => ({ ...s, email: v }))} />
+          <Field label="Telefon" value={siteDraft.phone} onChange={(v) => setSiteDraft((s) => ({ ...s, phone: v }))} />
           <div className="sm:col-span-2">
             <label className="admin-label">Logo dosyası</label>
             <p className="mt-1 text-xs text-slate-500">PNG, JPG, SVG (öneri: yatay logo)</p>
@@ -64,12 +97,16 @@ export function SiteSettingsPage() {
                   }}
                 />
               </label>
-              <button type="button" className="admin-btn admin-btn-secondary" onClick={() => saveSite({ logo: '' })}>
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary"
+                onClick={() => setSiteDraft((s) => ({ ...s, logo: '' }))}
+              >
                 Logoyu temizle
               </button>
             </div>
-            {content.site.logo ? (
-              <img src={content.site.logo} alt="Site logosu önizleme" className="mt-3 h-12 max-w-[16rem] rounded-md object-contain" />
+            {siteDraft.logo ? (
+              <img src={siteDraft.logo} alt="Site logosu önizleme" className="mt-3 h-12 max-w-[16rem] rounded-md object-contain" />
             ) : null}
           </div>
           <div className="sm:col-span-2">
@@ -91,35 +128,37 @@ export function SiteSettingsPage() {
                   }}
                 />
               </label>
-              <button type="button" className="admin-btn admin-btn-secondary" onClick={() => saveSite({ favicon: '/favicon.svg' })}>
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary"
+                onClick={() => setSiteDraft((s) => ({ ...s, favicon: '/favicon.svg' }))}
+              >
                 Varsayılan favicon
               </button>
             </div>
-            {content.site.favicon ? (
-              <img src={content.site.favicon} alt="Favicon önizleme" className="mt-3 h-10 w-10 rounded-md object-contain" />
+            {siteDraft.favicon ? (
+              <img src={siteDraft.favicon} alt="Favicon önizleme" className="mt-3 h-10 w-10 rounded-md object-contain" />
             ) : null}
           </div>
           <div className="sm:col-span-2">
-            <Field label="Adres" value={content.site.address} onBlur={(v) => saveSite({ address: v })} />
+            <Field label="Adres" value={siteDraft.address} onChange={(v) => setSiteDraft((s) => ({ ...s, address: v }))} />
           </div>
           <div className="sm:col-span-2">
             <label className="admin-label">Kısa slogan (hero)</label>
             <textarea
-              defaultValue={content.site.tagline}
-              key={content.site.tagline}
+              value={siteDraft.tagline}
               rows={2}
               className="admin-input mt-2"
-              onBlur={(e) => saveSite({ tagline: e.target.value })}
+              onChange={(e) => setSiteDraft((s) => ({ ...s, tagline: e.target.value }))}
             />
           </div>
           <div className="sm:col-span-2">
             <label className="admin-label">Açıklama (SEO / hero)</label>
             <textarea
-              defaultValue={content.site.description}
-              key={content.site.description}
+              value={siteDraft.description}
               rows={4}
               className="admin-input mt-2"
-              onBlur={(e) => saveSite({ description: e.target.value })}
+              onChange={(e) => setSiteDraft((s) => ({ ...s, description: e.target.value }))}
             />
           </div>
         </div>
@@ -212,20 +251,19 @@ function readAsDataUrl(file: File): Promise<string> {
 function Field({
   label,
   value,
-  onBlur,
+  onChange,
 }: {
   label: string
   value: string
-  onBlur: (v: string) => void
+  onChange: (v: string) => void
 }) {
   return (
     <div>
       <label className="admin-label">{label}</label>
       <input
-        defaultValue={value}
-        key={value}
+        value={value}
         className="admin-input mt-2"
-        onBlur={(e) => onBlur(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
       />
     </div>
   )

@@ -1,3 +1,4 @@
+import { readFileAsDataUrl } from '../../lib/readFileAsDataUrl'
 import { useSiteContent } from '../../content/SiteContentContext'
 import { useToast } from '../../components/Toast'
 import type { HeroSlide, HeroStatCard } from '../../content/types'
@@ -66,19 +67,68 @@ export function HeroSettingsPage() {
                 </button>
               </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-semibold text-slate-600">Görsel URL</label>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-slate-600">Görsel</label>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Dosya seçin veya URL yapıştırın; ana sayfa slider’ında aynı görsel kullanılır.
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <label className="admin-btn admin-btn-secondary cursor-pointer">
+                      Dosya seç
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          void readFileAsDataUrl(file)
+                            .then((src) => {
+                              const next = [...content.heroSlides]
+                              next[i] = { ...slide, src }
+                              persistSlides(next)
+                            })
+                            .catch(() => toast('Görsel dosyası okunamadı.', 'error'))
+                            .finally(() => {
+                              e.target.value = ''
+                            })
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn-secondary"
+                      onClick={() => {
+                        const next = [...content.heroSlides]
+                        next[i] = { ...slide, src: '' }
+                        persistSlides(next)
+                      }}
+                    >
+                      Temizle
+                    </button>
+                  </div>
                   <input
                     defaultValue={slide.src}
-                    key={slide.src}
-                    className="admin-input mt-1"
+                    key={`${slide.id}-src-${slide.src ? slide.src.length : 0}`}
+                    className="admin-input mt-3 font-mono text-xs"
+                    placeholder="https://… veya yukarıdan dosya yükleyin"
                     onBlur={(e) => {
                       const next = [...content.heroSlides]
                       next[i] = { ...slide, src: e.target.value }
                       persistSlides(next)
                     }}
                   />
-                  <ImagePreview url={slide.src} className="mt-2" />
+                  {slide.src.trim() ? (
+                    <ImagePreview
+                      url={slide.src}
+                      className="mt-3"
+                      imgClassName="max-h-[min(22rem,50vh)] min-h-[10rem] w-full object-cover object-center"
+                    />
+                  ) : (
+                    <div className="mt-3 flex min-h-[10rem] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-center text-sm text-slate-500">
+                      Görsel yok — herkese açık sitede varsayılan yedek görsel gösterilir
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-600">Slayt başlığı</label>
@@ -93,19 +143,6 @@ export function HeroSettingsPage() {
                     }}
                   />
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-slate-600">Slayt açıklaması</label>
-                  <textarea
-                    defaultValue={slide.description ?? ''}
-                    key={slide.description}
-                    className="admin-input mt-1 min-h-[84px]"
-                    onBlur={(e) => {
-                      const next = [...content.heroSlides]
-                      next[i] = { ...slide, description: e.target.value }
-                      persistSlides(next)
-                    }}
-                  />
-                </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-600">Alt metin</label>
                   <input
@@ -115,6 +152,19 @@ export function HeroSettingsPage() {
                     onBlur={(e) => {
                       const next = [...content.heroSlides]
                       next[i] = { ...slide, alt: e.target.value }
+                      persistSlides(next)
+                    }}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-slate-600">Slayt açıklaması</label>
+                  <textarea
+                    defaultValue={slide.description ?? ''}
+                    key={slide.description}
+                    className="admin-input mt-1 min-h-[84px]"
+                    onBlur={(e) => {
+                      const next = [...content.heroSlides]
+                      next[i] = { ...slide, description: e.target.value }
                       persistSlides(next)
                     }}
                   />
@@ -134,7 +184,7 @@ export function HeroSettingsPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Değer</p>
           </div>
           {content.heroStats.map((row, i) => (
-            <div key={i} className="grid gap-2 sm:grid-cols-2">
+            <div key={`hero-stat-${i}-${row.label}`} className="grid gap-2 sm:grid-cols-2">
               <input
                 defaultValue={row.label}
                 key={row.label}

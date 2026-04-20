@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { defaultHomeSectionCopy } from '../data/homeSectionCopy'
+import { buildDefaultSiteContent } from '../content/buildDefault'
 import type {
   AboutPageContent,
   ConsultingService,
@@ -22,6 +24,11 @@ interface SiteConfigRow {
   address: string
   tagline: string
   description: string
+  logo: string | null
+  favicon: string | null
+  page_banners: Partial<SiteContent['pageBanners']> | null
+  home_section_copy: Partial<SiteContent['homeSectionCopy']> | null
+  email_settings: Partial<SiteContent['emailSettings']> | null
 }
 
 interface NavItemRow {
@@ -101,6 +108,7 @@ interface SiteVisualsRow {
 
 export async function fetchSiteContent(): Promise<SiteContent | null> {
   try {
+    const defaults = buildDefaultSiteContent()
     const [
       { data: cfg },
       { data: navRows },
@@ -133,8 +141,8 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
       email: cfg.email,
       phone: cfg.phone,
       address: cfg.address,
-      logo: '',
-      favicon: '/favicon.svg',
+      logo: cfg.logo ?? '',
+      favicon: cfg.favicon ?? '/favicon.svg',
     }
 
     const navItems: NavItem[] = navRows.map((r) => ({
@@ -222,14 +230,16 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
       aboutPage,
       visuals,
       pageBanners: {
-        hakkimizda: '',
-        iletisim: '',
-        danismanlikHub: '',
-        egitimHub: '',
-        sektorelHub: '',
-        danismanlikDetay: '',
-        egitimDetay: '',
-        sektorelDetay: '',
+        ...defaults.pageBanners,
+        ...(cfg.page_banners ?? {}),
+      },
+      homeSectionCopy: {
+        ...defaultHomeSectionCopy,
+        ...(cfg.home_section_copy ?? {}),
+      },
+      emailSettings: {
+        ...defaults.emailSettings,
+        ...(cfg.email_settings ?? {}),
       },
     }
   } catch (err) {
@@ -243,6 +253,85 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
 export async function upsertSiteConfig(patch: Partial<SiteConfigRow>): Promise<void> {
   const { error } = await supabase.from('site_config').upsert({ id: 1, ...patch })
   if (error) throw error
+}
+
+export async function syncSiteContentSnapshot(content: SiteContent): Promise<void> {
+  await upsertSiteConfig({
+    name: content.site.name,
+    site_url: content.site.url,
+    email: content.site.email,
+    phone: content.site.phone,
+    address: content.site.address,
+    tagline: content.site.tagline,
+    description: content.site.description,
+    logo: content.site.logo,
+    favicon: content.site.favicon,
+    page_banners: content.pageBanners,
+    home_section_copy: content.homeSectionCopy,
+    email_settings: content.emailSettings,
+  })
+
+  await upsertNavItems(
+    content.navItems.map((item, idx) => ({
+      id: item.id,
+      label: item.label,
+      label_short: item.labelShort ?? null,
+      sort_order: (idx + 1) * 10,
+    })),
+  )
+
+  await upsertAboutPage({
+    hero_image_url: content.aboutPage.heroImageUrl,
+    hero_eyebrow: content.aboutPage.heroEyebrow,
+    hero_title: content.aboutPage.heroTitle,
+    hero_subtitle_override: content.aboutPage.heroSubtitleOverride,
+    meta_description: content.aboutPage.metaDescription,
+    main_paragraph: content.aboutPage.mainParagraph,
+    bullets: content.aboutPage.bullets,
+    side_card_title: content.aboutPage.sideCardTitle,
+    side_card_text: content.aboutPage.sideCardText,
+    focus_areas: content.aboutPage.focusAreas,
+    cta_strip_title: content.aboutPage.ctaStripTitle,
+  })
+
+  await upsertSiteVisuals({
+    consulting_hub_hero: content.visuals.consulting.hubHero,
+    consulting_hub_secondary: content.visuals.consulting.hubSecondary,
+    consulting_service_images: content.visuals.consulting.serviceHeroBySlug,
+    training_hub_hero: content.visuals.training.hubHero,
+    training_hub_secondary: content.visuals.training.hubSecondary,
+    sectoral_hub_hero: content.visuals.sectoral.hubHero,
+    sectoral_hub_secondary: content.visuals.sectoral.hubSecondary,
+    sectoral_service_images: content.visuals.sectoral.heroBySlug,
+  })
+
+  const { error: slideDeleteError } = await supabase
+    .from('hero_slides')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000')
+  if (slideDeleteError) throw slideDeleteError
+
+  if (content.heroSlides.length > 0) {
+    const { error: slideInsertError } = await supabase.from('hero_slides').insert(
+      content.heroSlides.map((slide, idx) => ({
+        src: slide.src,
+        alt: slide.alt,
+        sort_order: (idx + 1) * 10,
+      })),
+    )
+    if (slideInsertError) throw slideInsertError
+  }
+
+  await upsertHeroStats(
+    content.heroStats.map((row, idx) => ({
+      label: row.label,
+      value: row.value,
+      sort_order: (idx + 1) * 10,
+    })),
+  )
+
+  await upsertHighlights('training', content.trainingHighlights)
+  await upsertHighlights('sectoral', content.sectoralHighlights)
 }
 
 export async function upsertAboutPage(patch: Partial<AboutPageRow>): Promise<void> {

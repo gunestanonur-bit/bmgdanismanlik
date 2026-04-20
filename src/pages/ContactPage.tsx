@@ -2,17 +2,15 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { SeoHelmet } from '../components/SeoHelmet'
 import { ContactPanel } from '../components/sections/ContactSection'
+import { CONTACT_PAGE_HERO_FALLBACK } from '../content/contactHeroFallback'
 import { getPageBanner } from '../content/selectors'
 import { useSiteContent } from '../content/SiteContentContext'
 import { organizationJsonLd } from '../lib/seo'
 
-const CONTACT_HERO =
-  'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?auto=format&fit=crop&w=2400&q=85'
-
 export function ContactPage() {
   const { content } = useSiteContent()
   const { site } = content
-  const pageBanner = getPageBanner(content, 'iletisim', CONTACT_HERO)
+  const pageBanner = getPageBanner(content, 'iletisim', CONTACT_PAGE_HERO_FALLBACK)
   const { pathname } = useLocation()
   const title = `İletişim | ${site.name}`
   const metaDesc = `${site.name} ile iletişime geçin. Danışmanlık, eğitim ve belgelendirme talepleriniz için form veya doğrudan e-posta ve telefon.`

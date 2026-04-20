@@ -1,31 +1,61 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import type { ConsultingService } from '../../content/types'
 import { useSiteContent } from '../../content/SiteContentContext'
+import { AdminPageBannerPreview } from '../components/AdminPageBannerPreview'
 import { useToast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
 
+function newEmptyService(slug: string): ConsultingService {
+  return {
+    slug,
+    code: 'KOD',
+    title: 'Yeni hizmet',
+    summary: 'Kısa özet.',
+    intro: 'Giriş paragrafını düzenleyin.',
+    introImageUrl: '',
+    offerings: ['İlk madde'],
+    offeringsImageUrl: '',
+    customSectionTitle: '',
+    customSectionItems: [],
+    customSectionImageUrl: '',
+    processImageUrl: '',
+    processSteps: [{ title: 'Adım 1', text: 'Açıklama.' }],
+  }
+}
+
 type Kind = 'consulting' | 'training' | 'sectoral'
 
-const titles: Record<Kind, { title: string; desc: string; base: string }> = {
+const titles: Record<
+  Kind,
+  { title: string; desc: string; base: string; bannerKey: 'danismanlikHub' | 'egitimHub' | 'sektorelHub'; publicPath: string }
+> = {
   consulting: {
     title: 'Danışmanlık hizmetleri',
     desc: 'Her satır bir detay sayfasına gider. Slug URL’de kullanılır.',
     base: '/admin/consulting',
+    bannerKey: 'danismanlikHub',
+    publicPath: '/danismanlik',
   },
   training: {
     title: 'Eğitim programları',
     desc: 'Programlar ve detay sayfaları.',
     base: '/admin/training',
+    bannerKey: 'egitimHub',
+    publicPath: '/egitim',
   },
   sectoral: {
     title: 'Sektörel hizmetler',
     desc: 'Sektörel detay sayfaları.',
     base: '/admin/sectoral',
+    bannerKey: 'sektorelHub',
+    publicPath: '/sektorel',
   },
 }
 
 export function ServiceListPage({ kind }: { kind: Kind }) {
   const { content, updateContent } = useSiteContent()
   const toast = useToast()
+  const navigate = useNavigate()
   const list =
     kind === 'consulting'
       ? content.consultingServices
@@ -34,6 +64,38 @@ export function ServiceListPage({ kind }: { kind: Kind }) {
         : content.sectoralServices
   const meta = titles[kind]
   const key = kind === 'consulting' ? 'consultingServices' : kind === 'training' ? 'trainingServices' : 'sectoralServices'
+  const hubHeroFallback =
+    kind === 'consulting'
+      ? content.visuals.consulting.hubHero
+      : kind === 'training'
+        ? content.visuals.training.hubHero
+        : content.visuals.sectoral.hubHero
+
+  function addService() {
+    const slug = `yeni-${Date.now()}`
+    const svc = newEmptyService(slug)
+    updateContent((c) => ({
+      ...c,
+      [key]: [...c[key], svc],
+    }))
+    toast('Yeni hizmet oluşturuldu.')
+    navigate(`${meta.base}/${encodeURIComponent(slug)}`)
+  }
+
+  async function removeAllServices() {
+    const n = list.length
+    if (n === 0) return
+    if (!confirm(`${n} hizmet kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misiniz?`)) return
+    updateContent((c) => ({ ...c, [key]: [] }))
+    toast('Tüm hizmetler silindi.', 'warning')
+    try {
+      const { error } = await supabase.from('services').delete().eq('kind', kind)
+      if (error) throw error
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Sunucu silme hatası.'
+      toast(`Yerelde silindi; Supabase: ${msg}`, 'error')
+    }
+  }
 
   async function removeService(slug: string) {
     if (!confirm('Bu hizmet silinecek. Emin misiniz?')) return
@@ -57,7 +119,30 @@ export function ServiceListPage({ kind }: { kind: Kind }) {
       <h1 className="admin-page-title">{meta.title}</h1>
       <p className="admin-page-subtitle">{meta.desc}</p>
 
+      <div className="mt-8">
+        <AdminPageBannerPreview
+          bannerKey={meta.bannerKey}
+          fallback={hubHeroFallback}
+          title={`${meta.title} — liste üstü banner`}
+          publicPath={meta.publicPath}
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => addService()} className="admin-btn admin-btn-primary">
+          + Yeni hizmet
+        </button>
+        {list.length > 0 ? (
+          <button type="button" onClick={() => void removeAllServices()} className="admin-btn admin-btn-danger">
+            Tümünü sil
+          </button>
+        ) : null}
+      </div>
+
       <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {list.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-slate-500">Henüz hizmet yok. «Yeni hizmet» ile ekleyin.</p>
+        ) : (
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500">
             <tr>
@@ -98,6 +183,7 @@ export function ServiceListPage({ kind }: { kind: Kind }) {
             ))}
           </tbody>
         </table>
+        )}
       </div>
     </div>
   )

@@ -83,6 +83,32 @@ export type SiteVisuals = {
   }
 }
 
+/** Ana sayfa bölümleri + footer — önceden bileşen içinde sabit metinlerdi */
+export type HomeSectionCopy = {
+  contactEyebrow: string
+  contactTitle: string
+  contactIntro: string
+  consultingEyebrow: string
+  consultingTitle: string
+  consultingIntro: string
+  trainingEyebrow: string
+  trainingTitle: string
+  trainingIntro: string
+  trainingHubButton: string
+  sectoralEyebrow: string
+  sectoralTitle: string
+  sectoralIntro: string
+  sectoralHubButton: string
+  footerCtaPrimary: string
+  footerCtaSecondary: string
+  footerHeadingExplore: string
+  footerHeadingServices: string
+  footerHeadingContact: string
+  footerBottomTagline: string
+  whatsappTooltip: string
+  whatsappPresetMessage: string
+}
+
 export type PageBanners = {
   hakkimizda: string
   iletisim: string
@@ -92,6 +118,13 @@ export type PageBanners = {
   danismanlikDetay: string
   egitimDetay: string
   sektorelDetay: string
+}
+
+export type EmailSettings = {
+  recipientEmail: string
+  fromName: string
+  subjectPrefix: string
+  successMessage: string
 }
 
 export type SiteContent = {
@@ -107,6 +140,8 @@ export type SiteContent = {
   aboutPage: AboutPageContent
   visuals: SiteVisuals
   pageBanners: PageBanners
+  homeSectionCopy: HomeSectionCopy
+  emailSettings: EmailSettings
 }
 
 export const CONTENT_VERSION = 1 as const

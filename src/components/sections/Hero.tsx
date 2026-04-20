@@ -82,9 +82,9 @@ export function Hero() {
       <div className="relative z-30 -mt-8 px-4 pb-4 sm:-mt-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <dl className="glass-panel grid gap-3 rounded-3xl p-5 sm:grid-cols-3 sm:gap-4 sm:p-8">
-            {heroStats.map((row) => (
+            {heroStats.map((row, i) => (
               <div
-                key={row.label}
+                key={`${row.label}-${i}`}
                 className="relative rounded-2xl border border-slate-200/60 bg-gradient-to-br from-white to-slate-50/80 px-4 py-3 shadow-sm sm:px-5 sm:py-4"
               >
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">{row.label}</dt>

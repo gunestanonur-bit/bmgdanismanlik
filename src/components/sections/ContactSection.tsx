@@ -6,19 +6,13 @@ import { useSiteContent } from '../../content/SiteContentContext'
 
 export function ContactInfoBlock() {
   const { content } = useSiteContent()
-  const { site } = content
+  const { site, homeSectionCopy: h } = content
   const telHref = site.phone.replace(/[^\d+]/g, '')
 
   return (
     <>
-      <SectionHeading
-        id="iletisim-baslik"
-        eyebrow="İletişim"
-        title="Bize ulaşın"
-      >
-        <p className="mt-6 text-lg leading-relaxed text-slate-600">
-          Projenizi veya mevcut sisteminizi kısaca anlatın; size en uygun danışmanlık ve eğitim seçeneklerini birlikte değerlendirelim.
-        </p>
+      <SectionHeading id="iletisim-baslik" eyebrow={h.contactEyebrow} title={h.contactTitle}>
+        <p className="mt-6 text-lg leading-relaxed text-slate-600">{h.contactIntro}</p>
       </SectionHeading>
       <dl className="mt-10 space-y-5 text-slate-700">
         <div className="rounded-2xl border border-slate-200/60 bg-white/80 px-4 py-3">
@@ -70,9 +64,11 @@ const inputBase =
   'mt-2 w-full rounded-2xl border bg-slate-50/80 px-4 py-4 text-base text-slate-900 outline-none transition focus:bg-white focus:ring-4 sm:py-3.5 sm:text-sm'
 
 export function ContactFormBlock() {
+  const { content } = useSiteContent()
   const [errors, setErrors] = useState<FormErrors>({})
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   function validate(data: FormData): FormErrors {
     const errs: FormErrors = {}
@@ -91,18 +87,45 @@ export function ContactFormBlock() {
     return errs
   }
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const data = new FormData(e.currentTarget)
     const errs = validate(data)
     setErrors(errs)
+    setSubmitError('')
     if (Object.keys(errs).length > 0) return
 
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    try {
+      const payload = {
+        ad: String(data.get('ad') ?? '').trim(),
+        email: String(data.get('email') ?? '').trim(),
+        telefon: String(data.get('telefon') ?? '').trim(),
+        konu: String(data.get('konu') ?? '').trim(),
+        mesaj: String(data.get('mesaj') ?? '').trim(),
+        recipientEmail: content.emailSettings.recipientEmail,
+        fromName: content.emailSettings.fromName,
+        subjectPrefix: content.emailSettings.subjectPrefix,
+      }
+
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const parsed = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(parsed?.error ?? 'Mesaj gonderilemedi.')
+      }
+
       setSent(true)
-    }, 900)
+      e.currentTarget.reset()
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Mesaj gonderilemedi.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (sent) {
@@ -117,7 +140,7 @@ export function ContactFormBlock() {
           Mesajınız iletildi
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-600">
-          En kısa sürede sizinle iletişime geçeceğiz. Teşekkür ederiz.
+          {content.emailSettings.successMessage}
         </p>
       </div>
     )
@@ -171,6 +194,31 @@ export function ContactFormBlock() {
         </div>
 
         <div>
+          <label htmlFor="telefon" className="text-sm font-semibold text-slate-800">
+            Telefon (istege bagli)
+          </label>
+          <input
+            id="telefon"
+            name="telefon"
+            type="tel"
+            autoComplete="tel"
+            className={`${inputBase} border-slate-200 focus:border-primary-400 focus:ring-primary-600/15`}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="konu" className="text-sm font-semibold text-slate-800">
+            Konu (istege bagli)
+          </label>
+          <input
+            id="konu"
+            name="konu"
+            type="text"
+            className={`${inputBase} border-slate-200 focus:border-primary-400 focus:ring-primary-600/15`}
+          />
+        </div>
+
+        <div>
           <label htmlFor="mesaj" className="text-sm font-semibold text-slate-800">
             Mesajınız
           </label>
@@ -188,6 +236,12 @@ export function ContactFormBlock() {
             </p>
           )}
         </div>
+
+        {submitError && (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+            {submitError}
+          </p>
+        )}
 
         <button
           type="submit"

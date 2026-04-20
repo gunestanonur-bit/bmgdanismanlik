@@ -24,7 +24,7 @@ const linkClass =
 
 export function Footer() {
   const { content } = useSiteContent()
-  const { site, navItems } = content
+  const { site, navItems, homeSectionCopy: h } = content
   const explore = navItems.filter((i) => i.id === 'hakkimizda' || i.id === 'iletisim')
   const services = navItems.filter((i) => i.id === 'danismanlik' || i.id === 'egitim' || i.id === 'sektorel')
 
@@ -61,20 +61,20 @@ export function Footer() {
                 to="/iletisim"
                 className="inline-flex items-center justify-center rounded-2xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-900/30 transition hover:bg-primary-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               >
-                Teklif Alın
+                {h.footerCtaPrimary}
               </Link>
               <a
                 href={`mailto:${site.email}`}
                 className="inline-flex items-center justify-center rounded-2xl border border-slate-700/90 bg-slate-900/40 px-5 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-600 hover:bg-slate-800/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               >
-                E-posta gönder
+                {h.footerCtaSecondary}
               </a>
             </div>
           </div>
 
           <div className="grid gap-10 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-2">
             <div>
-              <h2 className={headingClass}>Keşfet</h2>
+              <h2 className={headingClass}>{h.footerHeadingExplore}</h2>
               <ul className="mt-5 space-y-1">
                 {explore.map((item) => (
                   <li key={item.id}>
@@ -87,7 +87,7 @@ export function Footer() {
               </ul>
             </div>
             <div>
-              <h2 className={headingClass}>Hizmetler</h2>
+              <h2 className={headingClass}>{h.footerHeadingServices}</h2>
               <ul className="mt-5 space-y-1">
                 {services.map((item) => (
                   <li key={item.id}>
@@ -102,7 +102,7 @@ export function Footer() {
           </div>
 
           <div className="lg:col-span-3">
-            <h2 className={headingClass}>İletişim</h2>
+            <h2 className={headingClass}>{h.footerHeadingContact}</h2>
             <ul className="mt-5 space-y-4 text-sm">
               <li>
                 <span className="block text-xs font-medium uppercase tracking-wide text-slate-500">E-posta</span>
@@ -131,7 +131,7 @@ export function Footer() {
           <p className="text-center text-xs text-slate-500 sm:text-left">
             © {year} {site.name}. Tüm hakları saklıdır.
           </p>
-          <p className="text-center text-[11px] text-slate-600 sm:text-right">ISO ve sektörel yönetim sistemlerinde danışmanlık ve eğitim.</p>
+          <p className="text-center text-[11px] text-slate-600 sm:text-right">{h.footerBottomTagline}</p>
         </div>
       </FadeIn>
     </footer>

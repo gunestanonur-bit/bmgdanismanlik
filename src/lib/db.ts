@@ -125,16 +125,16 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
   try {
     const defaults = buildDefaultSiteContent()
     const [
-      { data: cfg },
-      { data: navRows },
-      { data: slideRows },
-      { data: statRows },
-      { data: serviceRows },
-      { data: highlightRows },
-      { data: aboutRow },
-      { data: visualsRow },
+      { data: cfg, error: cfgError },
+      { data: navRows, error: navError },
+      { data: slideRows, error: slideError },
+      { data: statRows, error: statError },
+      { data: serviceRows, error: serviceError },
+      { data: highlightRows, error: highlightError },
+      { data: aboutRow, error: aboutError },
+      { data: visualsRow, error: visualsError },
     ] = await Promise.all([
-      supabase.from('site_config').select('*').eq('id', 1).single<SiteConfigRow>(),
+      supabase.from('site_config').select('*').eq('id', 1).maybeSingle<SiteConfigRow>(),
       supabase.from('nav_items').select('*').order('sort_order').returns<NavItemRow[]>(),
       supabase.from('hero_slides').select('*').order('sort_order').returns<HeroSlideRow[]>(),
       supabase.from('hero_stats').select('*').order('sort_order').returns<HeroStatRow[]>(),
@@ -144,39 +144,56 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
       supabase.from('site_visuals').select('*').eq('id', 1).single<SiteVisualsRow>(),
     ])
 
-    if (!cfg || !navRows || !slideRows || !statRows || !serviceRows || !highlightRows || !aboutRow || !visualsRow) {
-      return null
-    }
+    if (cfgError) console.warn('[db] site_config read failed, using defaults', cfgError)
+    if (navError) console.warn('[db] nav_items read failed, using defaults', navError)
+    if (slideError) console.warn('[db] hero_slides read failed, using defaults', slideError)
+    if (statError) console.warn('[db] hero_stats read failed, using defaults', statError)
+    if (serviceError) console.warn('[db] services read failed, using defaults', serviceError)
+    if (highlightError) console.warn('[db] section_highlights read failed, using defaults', highlightError)
+    if (aboutError) console.warn('[db] about_page read failed, using defaults', aboutError)
+    if (visualsError) console.warn('[db] site_visuals read failed, using defaults', visualsError)
+
+    const navRowsSafe = navRows ?? []
+    const slideRowsSafe = slideRows ?? []
+    const statRowsSafe = statRows ?? []
+    const serviceRowsSafe = serviceRows ?? []
+    const highlightRowsSafe = highlightRows ?? []
+    const aboutRowSafe = aboutRow
+    const visualsRowSafe = visualsRow
 
     const site: SiteInfo = {
-      name: cfg.name,
-      tagline: cfg.tagline,
-      description: cfg.description,
-      url: cfg.site_url,
-      googleBusinessProfileUrl: cfg.google_business_profile_url ?? '',
-      email: cfg.email,
-      phone: cfg.phone,
-      address: cfg.address,
-      logo: cfg.logo ?? '',
-      favicon: cfg.favicon ?? '/favicon.svg',
+      name: cfg?.name ?? defaults.site.name,
+      tagline: cfg?.tagline ?? defaults.site.tagline,
+      description: cfg?.description ?? defaults.site.description,
+      url: cfg?.site_url ?? defaults.site.url,
+      googleBusinessProfileUrl: cfg?.google_business_profile_url ?? defaults.site.googleBusinessProfileUrl,
+      email: cfg?.email ?? defaults.site.email,
+      phone: cfg?.phone ?? defaults.site.phone,
+      address: cfg?.address ?? defaults.site.address,
+      logo: cfg?.logo ?? defaults.site.logo,
+      favicon: cfg?.favicon ?? defaults.site.favicon,
     }
 
-    const navItems: NavItem[] = navRows.map((r) => ({
+    const navItems: NavItem[] = (navRowsSafe.length ? navRowsSafe : defaults.navItems).map((r) => ({
       id: r.id,
       label: r.label,
-      labelShort: r.label_short ?? undefined,
+      labelShort: 'label_short' in r ? (r.label_short ?? undefined) : r.labelShort,
     }))
 
-    const heroSlides: HeroSlide[] = slideRows.map((r) => ({
-      id: r.id,
-      src: r.src,
-      alt: r.alt,
-    }))
+    const heroSlides: HeroSlide[] = slideRowsSafe.length
+      ? slideRowsSafe.map((r) => ({
+          id: r.id,
+          src: r.src,
+          alt: r.alt,
+        }))
+      : defaults.heroSlides
 
-    const heroStats: HeroStatCard[] = statRows.map((r) => ({
-      label: r.label,
-      value: r.value,
-    }))
+    const heroStats: HeroStatCard[] = statRowsSafe.length
+      ? statRowsSafe.map((r) => ({
+          label: r.label,
+          value: r.value,
+        }))
+      : defaults.heroStats
 
     const toService = (r: ServiceRow): ConsultingService => ({
       slug: r.slug,
@@ -194,42 +211,48 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
       processSteps: r.process_steps ?? [],
     })
 
-    const consultingServices = serviceRows.filter((r) => r.kind === 'consulting').map(toService) as ConsultingService[]
-    const trainingServices = serviceRows.filter((r) => r.kind === 'training').map(toService) as TrainingService[]
-    const sectoralServices = serviceRows.filter((r) => r.kind === 'sectoral').map(toService) as SectoralService[]
+    const consultingServices = serviceRowsSafe.length
+      ? (serviceRowsSafe.filter((r) => r.kind === 'consulting').map(toService) as ConsultingService[])
+      : defaults.consultingServices
+    const trainingServices = serviceRowsSafe.length
+      ? (serviceRowsSafe.filter((r) => r.kind === 'training').map(toService) as TrainingService[])
+      : defaults.trainingServices
+    const sectoralServices = serviceRowsSafe.length
+      ? (serviceRowsSafe.filter((r) => r.kind === 'sectoral').map(toService) as SectoralService[])
+      : defaults.sectoralServices
 
-    const highlights = (kind: string) => highlightRows.filter((r) => r.kind === kind).map((r) => r.text)
-    const trainingHighlights = highlights('training')
-    const sectoralHighlights = highlights('sectoral')
+    const highlights = (kind: string) => highlightRowsSafe.filter((r) => r.kind === kind).map((r) => r.text)
+    const trainingHighlights = highlightRowsSafe.length ? highlights('training') : defaults.trainingHighlights
+    const sectoralHighlights = highlightRowsSafe.length ? highlights('sectoral') : defaults.sectoralHighlights
 
     const aboutPage: AboutPageContent = {
-      heroImageUrl: aboutRow.hero_image_url,
-      heroEyebrow: aboutRow.hero_eyebrow,
-      heroTitle: aboutRow.hero_title,
-      heroSubtitleOverride: aboutRow.hero_subtitle_override ?? '',
-      metaDescription: aboutRow.meta_description ?? '',
-      mainParagraph: aboutRow.main_paragraph,
-      bullets: aboutRow.bullets ?? [],
-      sideCardTitle: aboutRow.side_card_title,
-      sideCardText: aboutRow.side_card_text,
-      focusAreas: aboutRow.focus_areas ?? [],
-      ctaStripTitle: aboutRow.cta_strip_title,
+      heroImageUrl: aboutRowSafe?.hero_image_url ?? defaults.aboutPage.heroImageUrl,
+      heroEyebrow: aboutRowSafe?.hero_eyebrow ?? defaults.aboutPage.heroEyebrow,
+      heroTitle: aboutRowSafe?.hero_title ?? defaults.aboutPage.heroTitle,
+      heroSubtitleOverride: aboutRowSafe?.hero_subtitle_override ?? defaults.aboutPage.heroSubtitleOverride,
+      metaDescription: aboutRowSafe?.meta_description ?? defaults.aboutPage.metaDescription,
+      mainParagraph: aboutRowSafe?.main_paragraph ?? defaults.aboutPage.mainParagraph,
+      bullets: aboutRowSafe?.bullets ?? defaults.aboutPage.bullets,
+      sideCardTitle: aboutRowSafe?.side_card_title ?? defaults.aboutPage.sideCardTitle,
+      sideCardText: aboutRowSafe?.side_card_text ?? defaults.aboutPage.sideCardText,
+      focusAreas: aboutRowSafe?.focus_areas ?? defaults.aboutPage.focusAreas,
+      ctaStripTitle: aboutRowSafe?.cta_strip_title ?? defaults.aboutPage.ctaStripTitle,
     }
 
     const visuals: SiteVisuals = {
       consulting: {
-        hubHero: visualsRow.consulting_hub_hero,
-        hubSecondary: visualsRow.consulting_hub_secondary,
-        serviceHeroBySlug: visualsRow.consulting_service_images ?? {},
+        hubHero: visualsRowSafe?.consulting_hub_hero ?? defaults.visuals.consulting.hubHero,
+        hubSecondary: visualsRowSafe?.consulting_hub_secondary ?? defaults.visuals.consulting.hubSecondary,
+        serviceHeroBySlug: visualsRowSafe?.consulting_service_images ?? defaults.visuals.consulting.serviceHeroBySlug,
       },
       training: {
-        hubHero: visualsRow.training_hub_hero,
-        hubSecondary: visualsRow.training_hub_secondary,
+        hubHero: visualsRowSafe?.training_hub_hero ?? defaults.visuals.training.hubHero,
+        hubSecondary: visualsRowSafe?.training_hub_secondary ?? defaults.visuals.training.hubSecondary,
       },
       sectoral: {
-        hubHero: visualsRow.sectoral_hub_hero,
-        hubSecondary: visualsRow.sectoral_hub_secondary,
-        heroBySlug: visualsRow.sectoral_service_images ?? {},
+        hubHero: visualsRowSafe?.sectoral_hub_hero ?? defaults.visuals.sectoral.hubHero,
+        hubSecondary: visualsRowSafe?.sectoral_hub_secondary ?? defaults.visuals.sectoral.hubSecondary,
+        heroBySlug: visualsRowSafe?.sectoral_service_images ?? defaults.visuals.sectoral.heroBySlug,
       },
     }
 
@@ -247,15 +270,15 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
       visuals,
       pageBanners: {
         ...defaults.pageBanners,
-        ...(cfg.page_banners ?? {}),
+        ...(cfg?.page_banners ?? {}),
       },
       homeSectionCopy: {
         ...defaultHomeSectionCopy,
-        ...(cfg.home_section_copy ?? {}),
+        ...(cfg?.home_section_copy ?? {}),
       },
       emailSettings: {
         ...defaults.emailSettings,
-        ...(cfg.email_settings ?? {}),
+        ...(cfg?.email_settings ?? {}),
       },
     }
   } catch (err) {
@@ -267,8 +290,24 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
 // ── Write functions (admin — requires authenticated session) ──
 
 export async function upsertSiteConfig(patch: Partial<SiteConfigRow>): Promise<void> {
-  const { error } = await supabase.from('site_config').upsert({ id: 1, ...patch })
-  if (error) throw error
+  const row: Record<string, unknown> = { id: 1, ...patch }
+  const removed = new Set<string>()
+
+  for (let i = 0; i < 8; i += 1) {
+    const { error } = await supabase.from('site_config').upsert(row)
+    if (!error) return
+
+    const msg = String(error.message ?? '')
+    const missingColumn = msg.match(/column\s+"([^"]+)"\s+of\s+relation\s+"site_config"\s+does\s+not\s+exist/i)?.[1]
+    if (!missingColumn || !(missingColumn in row) || removed.has(missingColumn)) {
+      throw error
+    }
+
+    delete row[missingColumn]
+    removed.add(missingColumn)
+  }
+
+  throw new Error('site_config upsert failed after fallback retries')
 }
 
 export async function syncSiteContentSnapshot(content: SiteContent): Promise<void> {

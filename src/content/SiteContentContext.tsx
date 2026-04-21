@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -15,7 +16,8 @@ import {
   clearStoredContent,
 } from './storage'
 import { fetchSiteContent, syncSiteContentSnapshot } from '../lib/db'
-import type { HeroSlide, PageBanners, SiteContent } from './types'
+import { HAS_SUPABASE_CONFIG } from '../lib/supabase'
+import type { HeroSlide, SiteContent } from './types'
 
 /** DB / eski dışa aktarımlar eksik `title` & `description` bırakır; paket varsayılanlarıyla tamamla */
 function mergeHeroSlidesWithDefaults(defaults: HeroSlide[], incoming?: HeroSlide[] | null): HeroSlide[] {
@@ -30,78 +32,6 @@ function mergeHeroSlidesWithDefaults(defaults: HeroSlide[], incoming?: HeroSlide
       description: slide.description?.trim() ? slide.description : def.description,
     }
   })
-}
-
-/** `fetchSiteContent` does not yet load page banners from Supabase; keep uploads from localStorage */
-function overlayPageBannersFromLocalStorage(base: SiteContent): SiteContent {
-  const stored = loadStoredContent()
-  if (!stored?.pageBanners) return base
-  const next: PageBanners = { ...base.pageBanners }
-  for (const k of Object.keys(next) as (keyof PageBanners)[]) {
-    const v = stored.pageBanners[k]
-    if (typeof v === 'string' && v.trim()) next[k] = v
-  }
-  return { ...base, pageBanners: next }
-}
-
-/** Hero slider: DB has only src/alt; localStorage can hold uploads, pasted URLs, edited metin */
-function overlayHeroSlidesFromLocalStorage(base: SiteContent): SiteContent {
-  const stored = loadStoredContent()
-  if (!stored?.heroSlides?.length) return base
-
-  const merged = base.heroSlides.map((r, i) => {
-    const l = stored.heroSlides[i]
-    if (!l) return r
-
-    const srcL = l.src?.trim() ?? ''
-    const srcR = r.src?.trim() ?? ''
-    const dataUpload = srcL.startsWith('data:')
-    const pastedDifferentHttp =
-      (srcL.startsWith('http://') || srcL.startsWith('https://')) && srcL !== srcR
-
-    const textDiffers =
-      (l.title?.trim() && l.title !== r.title) ||
-      (l.description?.trim() && l.description !== r.description) ||
-      (l.alt?.trim() && l.alt !== r.alt)
-
-    if (dataUpload || pastedDifferentHttp || textDiffers) {
-      return {
-        ...r,
-        src: dataUpload || pastedDifferentHttp ? l.src : r.src,
-        title: l.title?.trim() ? l.title : r.title,
-        description: l.description?.trim() ? l.description : r.description,
-        alt: l.alt?.trim() ? l.alt : r.alt,
-      }
-    }
-
-    if (!r.title?.trim() && !r.description?.trim() && (l.title?.trim() || l.description?.trim())) {
-      return {
-        ...r,
-        title: l.title ?? r.title,
-        description: l.description ?? r.description,
-        alt: l.alt ?? r.alt,
-      }
-    }
-    return r
-  })
-
-  if (stored.heroSlides.length > base.heroSlides.length) {
-    return {
-      ...base,
-      heroSlides: [...merged, ...stored.heroSlides.slice(base.heroSlides.length)],
-    }
-  }
-  return { ...base, heroSlides: merged }
-}
-
-/** Uzak veri `homeSectionCopy` taşımayabilir; tarayıcıdaki düzenlemeleri koru */
-function overlayHomeSectionCopyFromLocalStorage(base: SiteContent): SiteContent {
-  const stored = loadStoredContent()
-  if (!stored?.homeSectionCopy) return base
-  return {
-    ...base,
-    homeSectionCopy: { ...base.homeSectionCopy, ...stored.homeSectionCopy },
-  }
 }
 
 // ── Context value ─────────────────────────────────────────────
@@ -193,37 +123,51 @@ export function SiteContentProvider({ children }: ProviderProps) {
     return buildDefaultSiteContent()
   })
   const [isLoading, setIsLoading] = useState(false)
+  const syncTimeoutRef = useRef<number | null>(null)
+  const pendingContentRef = useRef<SiteContent | null>(null)
 
   const persistToSupabase = useCallback((next: SiteContent) => {
-    void syncSiteContentSnapshot(next).catch((err) => {
-      console.error('[content] Supabase sync failed', err)
-    })
+    if (!HAS_SUPABASE_CONFIG) return
+    pendingContentRef.current = next
+    if (syncTimeoutRef.current) {
+      window.clearTimeout(syncTimeoutRef.current)
+    }
+    syncTimeoutRef.current = window.setTimeout(() => {
+      const snapshot = pendingContentRef.current
+      pendingContentRef.current = null
+      syncTimeoutRef.current = null
+      if (!snapshot) return
+      void syncSiteContentSnapshot(snapshot).catch((err) => {
+        console.error('[content] Supabase sync failed', err)
+      })
+    }, 550)
   }, [])
 
   useEffect(() => {
-    const stored = loadStoredContent()
-    if (stored) {
-      // Keep locally saved content stable across refreshes on this browser.
-      // Remote fetch is skipped to avoid overriding unsynced admin edits.
-      persistToSupabase(normalizeLoaded(stored))
-      setIsLoading(false)
-      return
+    return () => {
+      if (syncTimeoutRef.current) {
+        window.clearTimeout(syncTimeoutRef.current)
+      }
     }
+  }, [])
 
+  useEffect(() => {
     setIsLoading(true)
+    const stored = loadStoredContent()
     fetchSiteContent().then((remote) => {
       if (remote) {
-        const normalized = overlayHomeSectionCopyFromLocalStorage(
-          overlayHeroSlidesFromLocalStorage(
-            overlayPageBannersFromLocalStorage(normalizeLoaded(remote)),
-          ),
-        )
+        const normalized = normalizeLoaded(remote)
+        setContent(normalized)
+        saveContentToStorage(normalized)
+      } else if (stored) {
+        // Fall back to browser cache only when remote read fails.
+        const normalized = normalizeLoaded(stored)
         setContent(normalized)
         saveContentToStorage(normalized)
       }
       setIsLoading(false)
     })
-  }, [persistToSupabase])
+  }, [])
 
   const replaceContent = useCallback((next: SiteContent) => {
     const n = normalizeLoaded(next)
@@ -267,11 +211,12 @@ export function SiteContentProvider({ children }: ProviderProps) {
       const next = normalizeLoaded(parsed as Partial<SiteContent>)
       setContent(next)
       saveContentToStorage(next)
+      persistToSupabase(next)
       return { ok: true }
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : 'Okunamadı.' }
     }
-  }, [])
+  }, [persistToSupabase])
 
   const hasCustomData = useMemo((): boolean => {
     try {

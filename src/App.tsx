@@ -1,20 +1,22 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { AdminLayout } from './admin/AdminLayout'
-import { ProtectedAdmin } from './admin/ProtectedAdmin'
-import { AdminDashboard } from './admin/pages/AdminDashboard'
-import { AdminLoginPage } from './admin/pages/AdminLoginPage'
-import { HeroSettingsPage } from './admin/pages/HeroSettingsPage'
-import { ServiceEditPage } from './admin/pages/ServiceEditPage'
-import { ServiceListPage } from './admin/pages/ServiceListPage'
-import { AboutSettingsPage } from './admin/pages/AboutSettingsPage'
-import { SiteSettingsPage } from './admin/pages/SiteSettingsPage'
-import { VisualsSettingsPage } from './admin/pages/VisualsSettingsPage'
-import { BannerSettingsPage } from './admin/pages/BannerSettingsPage'
-import { HomeSectionsPage } from './admin/pages/HomeSectionsPage'
-import { EmailSettingsPage } from './admin/pages/EmailSettingsPage'
 import { Layout } from './components/Layout'
 import { PageLoader } from './components/PageLoader'
+
+const ProtectedAdmin = lazy(() => import('./admin/ProtectedAdmin').then((m) => ({ default: m.ProtectedAdmin })))
+const AdminLayout = lazy(() => import('./admin/AdminLayout').then((m) => ({ default: m.AdminLayout })))
+const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
+const AdminLoginPage = lazy(() => import('./admin/pages/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage })))
+const HeroSettingsPage = lazy(() => import('./admin/pages/HeroSettingsPage').then((m) => ({ default: m.HeroSettingsPage })))
+const ServiceEditPage = lazy(() => import('./admin/pages/ServiceEditPage').then((m) => ({ default: m.ServiceEditPage })))
+const ServiceListPage = lazy(() => import('./admin/pages/ServiceListPage').then((m) => ({ default: m.ServiceListPage })))
+const AboutSettingsPage = lazy(() => import('./admin/pages/AboutSettingsPage').then((m) => ({ default: m.AboutSettingsPage })))
+const SiteSettingsPage = lazy(() => import('./admin/pages/SiteSettingsPage').then((m) => ({ default: m.SiteSettingsPage })))
+const VisualsSettingsPage = lazy(() => import('./admin/pages/VisualsSettingsPage').then((m) => ({ default: m.VisualsSettingsPage })))
+const BannerSettingsPage = lazy(() => import('./admin/pages/BannerSettingsPage').then((m) => ({ default: m.BannerSettingsPage })))
+const HomeSectionsPage = lazy(() => import('./admin/pages/HomeSectionsPage').then((m) => ({ default: m.HomeSectionsPage })))
+const EmailSettingsPage = lazy(() => import('./admin/pages/EmailSettingsPage').then((m) => ({ default: m.EmailSettingsPage })))
+const RawContentPage = lazy(() => import('./admin/pages/RawContentPage').then((m) => ({ default: m.RawContentPage })))
 
 const HomePage = lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })))
 const HakkimizdaPage = lazy(() => import('./pages/HakkimizdaPage').then((m) => ({ default: m.HakkimizdaPage })))
@@ -50,6 +52,7 @@ export default function App() {
           <Route path="visuals" element={<VisualsSettingsPage />} />
           <Route path="banners" element={<BannerSettingsPage />} />
           <Route path="email" element={<EmailSettingsPage />} />
+          <Route path="all-data" element={<RawContentPage />} />
           <Route path="consulting" element={<ServiceListPage kind="consulting" />} />
           <Route path="consulting/:slug" element={<ServiceEditPage kind="consulting" />} />
           <Route path="training" element={<ServiceListPage kind="training" />} />

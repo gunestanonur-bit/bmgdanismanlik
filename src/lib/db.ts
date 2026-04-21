@@ -361,6 +361,40 @@ export async function syncSiteContentSnapshot(content: SiteContent): Promise<voi
     sectoral_service_images: content.visuals.sectoral.heroBySlug,
   })
 
+  const { error: serviceDeleteError } = await supabase
+    .from('services')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000')
+  if (serviceDeleteError) throw serviceDeleteError
+
+  const allServices = [
+    ...content.consultingServices.map((svc, idx) => ({ kind: 'consulting' as const, svc, idx })),
+    ...content.trainingServices.map((svc, idx) => ({ kind: 'training' as const, svc, idx })),
+    ...content.sectoralServices.map((svc, idx) => ({ kind: 'sectoral' as const, svc, idx })),
+  ]
+  if (allServices.length > 0) {
+    const { error: serviceInsertError } = await supabase.from('services').insert(
+      allServices.map(({ kind, svc, idx }) => ({
+        kind,
+        slug: svc.slug,
+        code: svc.code,
+        sort_order: (idx + 1) * 10,
+        title: svc.title,
+        summary: svc.summary,
+        intro: svc.intro,
+        intro_image_url: svc.introImageUrl ?? '',
+        offerings: svc.offerings,
+        offerings_image_url: svc.offeringsImageUrl ?? '',
+        custom_section_title: svc.customSectionTitle ?? '',
+        custom_section_items: svc.customSectionItems ?? [],
+        custom_section_image_url: svc.customSectionImageUrl ?? '',
+        process_image_url: svc.processImageUrl ?? '',
+        process_steps: svc.processSteps ?? [],
+      })),
+    )
+    if (serviceInsertError) throw serviceInsertError
+  }
+
   const { error: slideDeleteError } = await supabase
     .from('hero_slides')
     .delete()

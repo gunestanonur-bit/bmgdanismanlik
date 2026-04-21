@@ -195,6 +195,10 @@ export function ServiceEditPage({ kind }: { kind: Kind }) {
         { onConflict: 'kind,slug' },
       )
       if (error) throw error
+      if (d.slug !== oldSlug) {
+        const { error: oldDeleteError } = await supabase.from('services').delete().eq('kind', kind).eq('slug', oldSlug)
+        if (oldDeleteError) throw oldDeleteError
+      }
 
       updateContent((c) => {
         const arr = [...c[key]]

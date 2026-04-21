@@ -3,6 +3,7 @@ import { defaultHomeSectionCopy } from '../data/homeSectionCopy'
 import { buildDefaultSiteContent } from '../content/buildDefault'
 import type {
   AboutPageContent,
+  ContactMessage,
   ConsultingService,
   HeroSlide,
   HeroStatCard,
@@ -19,6 +20,7 @@ import type {
 interface SiteConfigRow {
   name: string
   site_url: string
+  google_business_profile_url: string | null
   email: string
   phone: string
   address: string
@@ -104,6 +106,19 @@ interface SiteVisualsRow {
   sectoral_service_images: Record<string, string>
 }
 
+interface ContactMessageRow {
+  id: string
+  ad: string
+  email: string
+  telefon: string | null
+  konu: string | null
+  mesaj: string
+  is_read: boolean
+  replied_at: string | null
+  reply_text: string | null
+  created_at: string
+}
+
 // ── Read functions ────────────────────────────────────────────
 
 export async function fetchSiteContent(): Promise<SiteContent | null> {
@@ -138,6 +153,7 @@ export async function fetchSiteContent(): Promise<SiteContent | null> {
       tagline: cfg.tagline,
       description: cfg.description,
       url: cfg.site_url,
+      googleBusinessProfileUrl: cfg.google_business_profile_url ?? '',
       email: cfg.email,
       phone: cfg.phone,
       address: cfg.address,
@@ -259,6 +275,7 @@ export async function syncSiteContentSnapshot(content: SiteContent): Promise<voi
   await upsertSiteConfig({
     name: content.site.name,
     site_url: content.site.url,
+    google_business_profile_url: content.site.googleBusinessProfileUrl,
     email: content.site.email,
     phone: content.site.phone,
     address: content.site.address,
@@ -384,5 +401,64 @@ export async function upsertHighlights(kind: string, texts: string[]): Promise<v
   if (texts.length === 0) return
   const rows = texts.map((text, i) => ({ kind, text, sort_order: (i + 1) * 10 }))
   const { error } = await supabase.from('section_highlights').insert(rows)
+  if (error) throw error
+}
+
+export async function createContactMessage(input: {
+  ad: string
+  email: string
+  telefon?: string
+  konu?: string
+  mesaj: string
+}): Promise<void> {
+  const { error } = await supabase.from('contact_messages').insert({
+    ad: input.ad,
+    email: input.email,
+    telefon: input.telefon ?? null,
+    konu: input.konu ?? null,
+    mesaj: input.mesaj,
+  })
+  if (error) throw error
+}
+
+export async function fetchContactMessages(): Promise<ContactMessage[]> {
+  const { data, error } = await supabase
+    .from('contact_messages')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .returns<ContactMessageRow[]>()
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    ad: row.ad,
+    email: row.email,
+    telefon: row.telefon ?? '',
+    konu: row.konu ?? '',
+    mesaj: row.mesaj,
+    isRead: row.is_read,
+    repliedAt: row.replied_at,
+    replyText: row.reply_text ?? '',
+    createdAt: row.created_at,
+  }))
+}
+
+export async function markContactMessageRead(id: string, isRead: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('contact_messages')
+    .update({ is_read: isRead })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function saveContactMessageReply(id: string, replyText: string): Promise<void> {
+  const { error } = await supabase
+    .from('contact_messages')
+    .update({ reply_text: replyText, replied_at: new Date().toISOString(), is_read: true })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteContactMessage(id: string): Promise<void> {
+  const { error } = await supabase.from('contact_messages').delete().eq('id', id)
   if (error) throw error
 }

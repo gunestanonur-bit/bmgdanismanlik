@@ -201,6 +201,15 @@ export function SiteContentProvider({ children }: ProviderProps) {
   }, [])
 
   useEffect(() => {
+    const stored = loadStoredContent()
+    if (stored) {
+      // Keep locally saved content stable across refreshes on this browser.
+      // Remote fetch is skipped to avoid overriding unsynced admin edits.
+      persistToSupabase(normalizeLoaded(stored))
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     fetchSiteContent().then((remote) => {
       if (remote) {
@@ -214,7 +223,7 @@ export function SiteContentProvider({ children }: ProviderProps) {
       }
       setIsLoading(false)
     })
-  }, [])
+  }, [persistToSupabase])
 
   const replaceContent = useCallback((next: SiteContent) => {
     const n = normalizeLoaded(next)

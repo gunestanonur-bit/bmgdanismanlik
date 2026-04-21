@@ -47,9 +47,19 @@ export function breadcrumbJsonLd(
 
 export function organizationJsonLd(
   siteUrl: string,
-  site: { name: string; description: string; email: string; phone: string; address: string; logo?: string; favicon?: string },
+  site: {
+    name: string
+    description: string
+    email: string
+    phone: string
+    address: string
+    logo?: string
+    favicon?: string
+    googleBusinessProfileUrl?: string
+  },
 ) {
   const base = normalizeSiteUrl(siteUrl)
+  const sameAs = [site.googleBusinessProfileUrl?.trim()].filter(Boolean)
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -60,6 +70,7 @@ export function organizationJsonLd(
     logo: resolveAssetUrl(siteUrl, site.logo || site.favicon || '/favicon.svg'),
     email: site.email,
     telephone: site.phone,
+    ...(sameAs.length > 0 ? { sameAs } : {}),
     address: {
       '@type': 'PostalAddress',
       addressCountry: 'TR',
@@ -84,9 +95,10 @@ export function webSiteJsonLd(siteUrl: string, site: { name: string; description
 
 export function professionalServiceJsonLd(
   siteUrl: string,
-  site: { name: string; description: string; url: string },
+  site: { name: string; description: string; url: string; googleBusinessProfileUrl?: string },
 ) {
   const base = normalizeSiteUrl(siteUrl)
+  const sameAs = [site.googleBusinessProfileUrl?.trim()].filter(Boolean)
   return {
     '@context': 'https://schema.org',
     '@type': 'ProfessionalService',
@@ -97,6 +109,44 @@ export function professionalServiceJsonLd(
     areaServed: { '@type': 'Country', name: 'Turkey' },
     availableLanguage: ['Turkish'],
     provider: { '@id': `${base}/#organization` },
+    ...(sameAs.length > 0 ? { sameAs } : {}),
+  }
+}
+
+export function localBusinessJsonLd(
+  siteUrl: string,
+  site: {
+    name: string
+    description: string
+    url: string
+    email: string
+    phone: string
+    address: string
+    logo?: string
+    favicon?: string
+    googleBusinessProfileUrl?: string
+  },
+) {
+  const base = normalizeSiteUrl(siteUrl)
+  const sameAs = [site.googleBusinessProfileUrl?.trim()].filter(Boolean)
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    '@id': `${base}/#local-business`,
+    name: site.name,
+    url: site.url || `${base}/`,
+    description: site.description,
+    image: resolveAssetUrl(siteUrl, site.logo || site.favicon || '/favicon.svg'),
+    email: site.email,
+    telephone: site.phone,
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'TR',
+      streetAddress: site.address,
+    },
+    areaServed: { '@type': 'Country', name: 'Turkey' },
+    availableLanguage: ['Turkish'],
+    ...(sameAs.length > 0 ? { sameAs } : {}),
   }
 }
 

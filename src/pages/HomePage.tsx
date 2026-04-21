@@ -10,6 +10,7 @@ import { SectoralSection } from '../components/sections/SectoralSection'
 import { ContactSection } from '../components/sections/ContactSection'
 import { useSiteContent } from '../content/SiteContentContext'
 import {
+  localBusinessJsonLd,
   organizationJsonLd,
   professionalServiceJsonLd,
   webSiteJsonLd,
@@ -34,11 +35,13 @@ export function HomePage() {
 
   const jsonLdBlocks = [
     organizationJsonLd(site.url, site),
+    localBusinessJsonLd(site.url, site),
     webSiteJsonLd(site.url, site),
     professionalServiceJsonLd(site.url, {
       name: site.name,
       description: site.description,
       url: site.url,
+      googleBusinessProfileUrl: site.googleBusinessProfileUrl,
     }),
   ]
 

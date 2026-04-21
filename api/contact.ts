@@ -27,6 +27,41 @@ function json(status: number, body: Record<string, unknown>): Response {
   })
 }
 
+async function archiveContactMessage(input: {
+  ad: string
+  email: string
+  telefon: string
+  konu: string
+  mesaj: string
+}): Promise<void> {
+  const supabaseUrl = process.env.SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceRoleKey) return
+
+  const base = supabaseUrl.replace(/\/+$/, '')
+  const res = await fetch(`${base}/rest/v1/contact_messages`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      ad: input.ad,
+      email: input.email,
+      telefon: input.telefon || null,
+      konu: input.konu || null,
+      mesaj: input.mesaj,
+    }),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`archive failed: ${text}`)
+  }
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' })
 
@@ -81,6 +116,12 @@ export default async function handler(req: Request): Promise<Response> {
     'Mesaj:',
     mesaj,
   ].join('\n')
+
+  try {
+    await archiveContactMessage({ ad, email, telefon, konu, mesaj })
+  } catch (err) {
+    console.error('[contact-api] archive failed', err)
+  }
 
   const resendRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',

@@ -11,6 +11,7 @@ export type SiteInfo = {
   tagline: string
   description: string
   url: string
+  googleBusinessProfileUrl: string
   email: string
   phone: string
   address: string
@@ -125,6 +126,19 @@ export type EmailSettings = {
   fromName: string
   subjectPrefix: string
   successMessage: string
+}
+
+export type ContactMessage = {
+  id: string
+  ad: string
+  email: string
+  telefon: string
+  konu: string
+  mesaj: string
+  isRead: boolean
+  repliedAt: string | null
+  replyText: string
+  createdAt: string
 }
 
 export type SiteContent = {

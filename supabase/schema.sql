@@ -11,6 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 DROP TABLE IF EXISTS site_visuals CASCADE;
 DROP TABLE IF EXISTS about_page CASCADE;
 DROP TABLE IF EXISTS section_highlights CASCADE;
+DROP TABLE IF EXISTS contact_messages CASCADE;
 DROP TABLE IF EXISTS services CASCADE;
 DROP TABLE IF EXISTS hero_stats CASCADE;
 DROP TABLE IF EXISTS hero_slides CASCADE;
@@ -27,6 +28,7 @@ CREATE TABLE site_config (
   id          SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   name        TEXT NOT NULL,
   site_url    TEXT NOT NULL,
+  google_business_profile_url TEXT NOT NULL DEFAULT '',
   email       TEXT NOT NULL,
   phone       TEXT NOT NULL,
   address     TEXT NOT NULL,
@@ -48,6 +50,7 @@ CREATE TABLE nav_items (
 );
 
 ALTER TABLE site_config
+  ADD COLUMN IF NOT EXISTS google_business_profile_url TEXT NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS logo TEXT NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS favicon TEXT NOT NULL DEFAULT '/favicon.svg',
   ADD COLUMN IF NOT EXISTS page_banners JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -104,6 +107,19 @@ CREATE TABLE section_highlights (
   kind        TEXT NOT NULL CHECK (kind IN ('consulting','training','sectoral')),
   text        TEXT NOT NULL DEFAULT '',
   sort_order  SMALLINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE contact_messages (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ad          TEXT NOT NULL,
+  email       TEXT NOT NULL,
+  telefon     TEXT,
+  konu        TEXT,
+  mesaj       TEXT NOT NULL,
+  is_read     BOOLEAN NOT NULL DEFAULT false,
+  replied_at  TIMESTAMPTZ,
+  reply_text  TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE about_page (
@@ -173,6 +189,7 @@ ALTER TABLE hero_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hero_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE section_highlights ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE about_page ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_visuals ENABLE ROW LEVEL SECURITY;
 
@@ -184,6 +201,7 @@ CREATE POLICY "public read services" ON services FOR SELECT TO anon USING (true)
 CREATE POLICY "public read section_highlights" ON section_highlights FOR SELECT TO anon USING (true);
 CREATE POLICY "public read about_page" ON about_page FOR SELECT TO anon USING (true);
 CREATE POLICY "public read site_visuals" ON site_visuals FOR SELECT TO anon USING (true);
+CREATE POLICY "public insert contact_messages" ON contact_messages FOR INSERT TO anon WITH CHECK (true);
 
 CREATE POLICY "auth write site_config" ON site_config FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth write nav_items" ON nav_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
@@ -191,6 +209,7 @@ CREATE POLICY "auth write hero_slides" ON hero_slides FOR ALL TO authenticated U
 CREATE POLICY "auth write hero_stats" ON hero_stats FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth write services" ON services FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth write section_highlights" ON section_highlights FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "auth manage contact_messages" ON contact_messages FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth write about_page" ON about_page FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "auth write site_visuals" ON site_visuals FOR ALL TO authenticated USING (true) WITH CHECK (true);
 

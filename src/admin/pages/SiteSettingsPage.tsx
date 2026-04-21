@@ -76,6 +76,11 @@ export function SiteSettingsPage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Field label="Site adı" value={siteDraft.name} onChange={(v) => setSiteDraft((s) => ({ ...s, name: v }))} />
           <Field label="Canonical URL" value={siteDraft.url} onChange={(v) => setSiteDraft((s) => ({ ...s, url: v }))} />
+          <Field
+            label="Google Business Profile URL"
+            value={siteDraft.googleBusinessProfileUrl}
+            onChange={(v) => setSiteDraft((s) => ({ ...s, googleBusinessProfileUrl: v }))}
+          />
           <Field label="E-posta" value={siteDraft.email} onChange={(v) => setSiteDraft((s) => ({ ...s, email: v }))} />
           <Field label="Telefon" value={siteDraft.phone} onChange={(v) => setSiteDraft((s) => ({ ...s, phone: v }))} />
           <div className="sm:col-span-2">

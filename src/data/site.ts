@@ -4,6 +4,7 @@ export const site = {
   description:
     'ISO ve sektörel standartlarda kurumsal danışmanlık, eğitim ve uygulama desteği sunuyoruz. Süreçlerinizi güçlendirin, belgelendirme yolculuğunuzu birlikte planlayalım.',
   url: 'https://example.com',
+  googleBusinessProfileUrl: '',
   email: 'info@example.com',
   phone: '+90 (___) ___ __ __',
   address: 'Türkiye',

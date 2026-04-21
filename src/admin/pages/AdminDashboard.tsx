@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useSiteContent } from '../../content/SiteContentContext'
 import { useToast } from '../../components/Toast'
+import { HAS_SUPABASE_CONFIG } from '../../lib/supabase'
 
 const navCards = [
   {
@@ -73,6 +74,13 @@ const navCards = [
     desc: 'Iletisim formu gonderim ayarlari',
     icon: '✉️',
   },
+  {
+    to: '/admin/all-data',
+    label: 'Tum veri editoru',
+    tag: 'JSON',
+    desc: 'Tum modeli tek ekranda duzenle',
+    icon: '🧠',
+  },
 ] as const
 
 export function AdminDashboard() {
@@ -95,6 +103,15 @@ export function AdminDashboard() {
       <p className="admin-page-subtitle">
         Tüm içerik tarayıcınızda saklanır (localStorage). Yedek için dışa aktarın; başka cihazda içe aktarın.
       </p>
+
+      {!HAS_SUPABASE_CONFIG && (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <span className="mt-0.5 text-red-500">⚠</span>
+          <p className="text-sm text-red-800">
+            Supabase ortam degiskenleri tanimli degil. Dashboard kayitlari sadece tarayicida kalir, veritabanina yazilmaz.
+          </p>
+        </div>
+      )}
 
       {hasCustomData && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">

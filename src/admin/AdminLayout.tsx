@@ -15,6 +15,7 @@ const navGroups = [
       { to: '/admin/banners', label: 'Bannerlar' },
       { to: '/admin/home-sections', label: 'Ana sayfa metinleri' },
       { to: '/admin/email', label: 'E-posta ayarlari' },
+      { to: '/admin/all-data', label: 'Tum veri editoru' },
     ],
   },
   {
